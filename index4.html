@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Γλωσσικών Κανόνων</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Nunito", sans-serif;
+      background: linear-gradient(180deg, #f4fbff 0%, #e1f3ff 60%, #daf5e5 100%);
+      color: #1a3850;
+      min-height: 100vh;
+      padding: 18px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.97);
+      border: 2px solid #cde7fb;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 61, 93, 0.12);
+    }
+
+    h1 {
+      text-align: center;
+      color: #0b629e;
+      font-size: clamp(24px, 4vw, 34px);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #43647c;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .question {
+      margin-top: 10px;
+      background: #f7fcff;
+      border: 2px solid #d2ebfb;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .q-title {
+      font-weight: 800;
+      color: #0a466f;
+      margin-bottom: 10px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .options {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .opt {
+      border: 2px solid #bfdff5;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #0b629e;
+      text-align: left;
+      transition: 0.15s ease;
+    }
+
+    .opt:hover { border-color: #74b8e7; transform: translateY(-1px); }
+    .opt.selected { border-color: #0b629e; background: #e8f4fd; }
+    .opt.correct { border-color: #2e9f48; background: #dff8e7; color: #22743a; }
+    .opt.wrong { border-color: #d64a4a; background: #ffe8e8; color: #9e2e2e; }
+    .opt:disabled { cursor: not-allowed; opacity: 0.98; }
+
+    .feedback {
+      margin-top: 8px;
+      min-height: 20px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-weight: 900;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #prevBtn, #nextBtn { background: #0b629e; color: #fff; }
+    #resetBtn { background: #e9f5ff; color: #0b629e; }
+    #prevBtn:disabled, #nextBtn:disabled {
+      background: #b7d5ec;
+      color: #f4fbff;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+      border-radius: 12px;
+      background: #eef8ff;
+      color: #0b629e;
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h1>Quiz Γλωσσικών Κανόνων</h1>
+      <p class="subtitle">Πάτα Σωστό αν η λέξη είναι σωστά γραμμένη.</p>
+      <p class="subtitle" id="counter"></p>
+
+      <div id="quiz"></div>
+
+      <div class="controls">
+        <button id="prevBtn" class="btn" type="button">Προηγούμενη</button>
+        <button id="nextBtn" class="btn" type="button">Επόμενη</button>
+        <button id="resetBtn" class="btn" type="button">Ξανά από την αρχή</button>
+      </div>
+
+      <div id="result" class="result">Καλή επιτυχία!</div>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      { text: "Ελληνίδα", options: ["Σωστό", "Λάθος"], answer: 0 },
+      { text: "ισπανός", options: ["Σωστό", "Λάθος"], answer: 1 },
+      { text: "γαλλικός", options: ["Σωστό", "Λάθος"], answer: 0 },
+      { text: "Θεσσαλονίκη", options: ["Σωστό", "Λάθος"], answer: 0 },
+      { text: "γιώργος", options: ["Σωστό", "Λάθος"], answer: 1 },
+      { text: "Χριστούγεννα", options: ["Σωστό", "Λάθος"], answer: 0 }
+    ];
+
+    const quizEl = document.getElementById("quiz");
+    const resultEl = document.getElementById("result");
+    const counterEl = document.getElementById("counter");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const state = new Map();
+    let currentIndex = 0;
+
+    function updateLiveScore() {
+      const score = questions.reduce((sum, q, i) => sum + (state.get(i) === q.answer ? 1 : 0), 0);
+      const answered = state.size;
+      const total = questions.length;
+      const percent = Math.round((score / total) * 100);
+      resultEl.textContent = `Σκορ: ${score}/${total} (${percent}%) • Απαντήθηκαν: ${answered}/${total}`;
+
+      if (percent >= 80) {
+        resultEl.style.background = "#dff8e7";
+        resultEl.style.color = "#22743a";
+      } else if (percent >= 50) {
+        resultEl.style.background = "#fff6dc";
+        resultEl.style.color = "#9a6a00";
+      } else {
+        resultEl.style.background = "#ffe8e8";
+        resultEl.style.color = "#9e2e2e";
+      }
+    }
+
+    function revealAnswer(card, index) {
+      const q = questions[index];
+      const selected = state.get(index);
+      const feedback = card.querySelector("#feedback");
+      const buttons = card.querySelectorAll(".opt");
+
+      buttons.forEach((b, idx) => {
+        b.classList.remove("selected", "correct", "wrong");
+        if (idx === selected) b.classList.add("selected");
+        if (idx === q.answer) b.classList.add("correct");
+        if (selected !== q.answer && idx === selected) b.classList.add("wrong");
+        b.disabled = true;
+      });
+
+      if (selected === q.answer) {
+        feedback.textContent = `Σωστό! Η σωστή απάντηση είναι: ${q.options[q.answer]}.`;
+        feedback.style.color = "#22743a";
+      } else {
+        feedback.textContent = `Λάθος. Η σωστή απάντηση είναι: ${q.options[q.answer]}.`;
+        feedback.style.color = "#9e2e2e";
+      }
+    }
+
+    function buildQuestionCard(index) {
+      const q = questions[index];
+      const card = document.createElement("article");
+      card.className = "question";
+      card.dataset.index = String(index);
+
+      const title = document.createElement("h3");
+      title.className = "q-title";
+      title.textContent = `${index + 1}. ${q.text}`;
+      card.appendChild(title);
+
+      const opts = document.createElement("div");
+      opts.className = "options";
+
+      q.options.forEach((optionText, optIndex) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "opt";
+        btn.textContent = optionText;
+        btn.addEventListener("click", () => {
+          if (state.has(index)) return;
+          state.set(index, optIndex);
+          revealAnswer(card, index);
+          updateLiveScore();
+        });
+        if (state.get(index) === optIndex) btn.classList.add("selected");
+        opts.appendChild(btn);
+      });
+
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedback.id = "feedback";
+
+      card.appendChild(opts);
+      card.appendChild(feedback);
+      return card;
+    }
+
+    function updateNavButtons() {
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === questions.length - 1;
+      counterEl.textContent = `Ερώτηση ${currentIndex + 1} από ${questions.length}`;
+    }
+
+    function renderCurrentQuestion() {
+      quizEl.innerHTML = "";
+      const card = buildQuestionCard(currentIndex);
+      quizEl.appendChild(card);
+      updateNavButtons();
+      if (state.has(currentIndex)) {
+        revealAnswer(card, currentIndex);
+      }
+    }
+
+    function renderQuiz() {
+      state.clear();
+      currentIndex = 0;
+      renderCurrentQuestion();
+      resultEl.textContent = "Καλή επιτυχία!";
+      resultEl.style.background = "#eef8ff";
+      resultEl.style.color = "#0b629e";
+    }
+
+    prevBtn.addEventListener("click", () => {
+      if (currentIndex === 0) return;
+      currentIndex -= 1;
+      renderCurrentQuestion();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentIndex >= questions.length - 1) return;
+      currentIndex += 1;
+      renderCurrentQuestion();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", renderQuiz);
+
+    renderQuiz();
+  </script>
+</body>
+</html>

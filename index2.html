@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz: πολύ, πολλή, πολύς, πολλοί</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Nunito", sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #f2fbff 0%, #d8f0ff 55%, #c9f2d9 100%);
+      color: #18334a;
+      padding: 18px;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.96);
+      border: 2px solid #d2ebff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 8px 25px rgba(24, 51, 74, 0.1);
+    }
+
+    .title {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 900;
+      color: #0a62a5;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #3a627f;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .tip {
+      background: #fff9db;
+      border-left: 5px solid #f2b705;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .question {
+      padding: 14px;
+      border: 2px dashed #bfe3ff;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      background: #f7fcff;
+    }
+
+    .q-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #083a68;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .option-btn {
+      border: 2px solid #b4daf6;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0a62a5;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .option-btn:hover {
+      transform: translateY(-2px);
+      border-color: #58a9e7;
+    }
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.98;
+    }
+
+    .option-btn.selected {
+      border-color: #0a62a5;
+      background: #dff0ff;
+    }
+
+    .option-btn.correct {
+      border-color: #2f9e44;
+      background: #dff9e7;
+      color: #1e7f36;
+    }
+
+    .option-btn.wrong {
+      border-color: #d83b3b;
+      background: #ffe4e4;
+      color: #a42b2b;
+    }
+
+    .feedback {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      min-height: 20px;
+    }
+
+    .controls {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button.action {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    #prevBtn, #nextBtn { background: #0a62a5; color: white; }
+    #resetBtn { background: #e8f4ff; color: #0a62a5; }
+    #prevBtn:disabled, #nextBtn:disabled {
+      background: #b7d5ec;
+      color: #f4fbff;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: 900;
+      font-size: 20px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #eef8ff;
+      color: #0a62a5;
+    }
+
+    .share {
+      margin-top: 16px;
+      font-size: 14px;
+      text-align: center;
+      color: #33546e;
+      word-break: break-word;
+    }
+
+    .share code {
+      background: #eef7ff;
+      border: 1px solid #cfe6fa;
+      border-radius: 8px;
+      padding: 2px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h1 class="title">Quiz Γ' Δημοτικού</h1>
+      <p class="subtitle">Πάτα <strong>Σωστό</strong> ή <strong>Λάθος</strong> για την πρόταση που βλέπεις.</p>
+      <div class="tip">
+        Μικρή βοήθεια: <strong>πολύ</strong> (ουδέτερο/επίρρημα), <strong>πολλή</strong> (θηλυκό), <strong>πολύς</strong> (αρσενικό ενικός), <strong>πολλοί</strong> (αρσενικό πληθυντικός).
+      </div>
+
+      <p class="subtitle" id="counter"></p>
+      <div id="quiz"></div>
+
+      <div class="controls">
+        <button id="prevBtn" class="action" type="button">Προηγούμενη</button>
+        <button id="nextBtn" class="action" type="button">Επόμενη</button>
+        <button id="resetBtn" class="action" type="button">Νέο παιχνίδι</button>
+      </div>
+
+      <div class="result" id="result">Καλή επιτυχία!</div>
+      <p class="share">Μοιράσου το quiz με URL: <code id="shareUrl"></code></p>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      { text: "Η Άννα έχει πολλή όρεξη για παιχνίδι.", answer: "σωστό", correction: 'Η σωστή μορφή είναι "πολλή", γιατί η "όρεξη" είναι θηλυκό.' },
+      { text: "Έφαγα πολλή ψωμί.", answer: "λάθος", correction: 'Σωστό είναι: "Έφαγα πολύ ψωμί."' },
+      { text: "Πολύς κόσμος πήγε στη γιορτή.", answer: "σωστό", correction: 'Μπράβο! "Πολύς κόσμος" είναι σωστό.' },
+      { text: "Η μαμά έχει πολύ υπομονή.", answer: "λάθος", correction: 'Σωστό είναι: "Η μαμά έχει πολλή υπομονή."' },
+      { text: "Ο Γιώργος έχει πολούς φίλους.", answer: "λάθος", correction: 'Σωστό είναι: "Ο Γιώργος έχει πολλούς φίλους."' },
+      { text: "Με πόνεσε η κοιλιά μου γιατί έφαγα πολύ.", answer: "σωστό", correction: 'Μπράβο! "Με πόνεσε η κοιλιά μου γιατί έφαγα πολύ" είναι σωστό.' },  
+      { text: "Πολλή άνθρωποι περίμεναν στην ουρά.", answer: "λάθος", correction: 'Σωστό είναι: "Πολλοί άνθρωποι περίμεναν στην ουρά."' },
+      { text: "Η μαμά είνα πολλή χαρούμενη σήμερα.", answer: "λάθος", correction: 'Σωστό είναι: "Η μαμά είναι πολύ χαρούμενη σήμερα."' },
+      { text: "Ο Νίκος είναι πολύ καλός φίλος.", answer: "σωστό", correction: 'Μπράβο! Εδώ το "πολύ" λειτουργεί ως επίρρημα.' }
+    ];
+
+    const tfOptions = ["σωστό", "λάθος"];
+    const quizEl = document.getElementById("quiz");
+    const resultEl = document.getElementById("result");
+    const shareUrlEl = document.getElementById("shareUrl");
+    const counterEl = document.getElementById("counter");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const state = new Map();
+    let currentIndex = 0;
+
+    function createQuestionCard(q, index) {
+      const wrap = document.createElement("article");
+      wrap.className = "question";
+      wrap.dataset.index = String(index);
+
+      const title = document.createElement("h2");
+      title.className = "q-title";
+      title.textContent = `${index + 1}. ${q.text}`;
+      wrap.appendChild(title);
+
+      const options = document.createElement("div");
+      options.className = "options";
+      tfOptions.forEach((opt) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "option-btn";
+        btn.textContent = opt === "σωστό" ? "Σωστό" : "Λάθος";
+        btn.dataset.value = opt;
+        btn.addEventListener("click", () => {
+          if (state.has(index)) return;
+          state.set(index, opt);
+          paintAnswer(index);
+          updateLiveScore();
+        });
+        options.appendChild(btn);
+      });
+
+      const feedback = document.createElement("p");
+      feedback.className = "feedback";
+      feedback.id = "feedback";
+
+      wrap.appendChild(options);
+      wrap.appendChild(feedback);
+      return wrap;
+    }
+
+    function paintAnswer(index) {
+      const q = questions[index];
+      const card = quizEl.querySelector(`[data-index="${index}"]`);
+      const feedback = document.getElementById("feedback");
+      const selected = state.get(index);
+      const buttons = card.querySelectorAll(".option-btn");
+
+      buttons.forEach((b) => {
+        b.classList.remove("selected", "correct", "wrong");
+        if (b.dataset.value === selected) b.classList.add("selected");
+        if (b.dataset.value === q.answer) b.classList.add("correct");
+        if (b.dataset.value === selected && selected !== q.answer) b.classList.add("wrong");
+        b.disabled = true;
+      });
+
+      if (selected === q.answer) {
+        feedback.textContent = "Μπράβο! Σωστή απάντηση.";
+        feedback.style.color = "#1e7f36";
+      } else {
+        feedback.textContent = `Λάθος. ${q.correction}`;
+        feedback.style.color = "#a42b2b";
+      }
+    }
+
+    function updateLiveScore() {
+      const score = questions.reduce((sum, q, i) => sum + (state.get(i) === q.answer ? 1 : 0), 0);
+      const answered = state.size;
+      const total = questions.length;
+      const percent = answered > 0 ? Math.round((score / total) * 100) : 0;
+
+      resultEl.textContent = `Σκορ: ${score}/${total} (${percent}%) • Απαντήθηκαν: ${answered}/${total}`;
+      if (percent >= 80) {
+        resultEl.style.background = "#dff9e7";
+        resultEl.style.color = "#1e7f36";
+      } else if (percent >= 50) {
+        resultEl.style.background = "#fff5d9";
+        resultEl.style.color = "#9a6a00";
+      } else {
+        resultEl.style.background = "#ffe4e4";
+        resultEl.style.color = "#a42b2b";
+      }
+    }
+
+    function updateNavButtons() {
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === questions.length - 1;
+      counterEl.textContent = `Ερώτηση ${currentIndex + 1} από ${questions.length}`;
+    }
+
+    function renderCurrentQuestion() {
+      quizEl.innerHTML = "";
+      const card = createQuestionCard(questions[currentIndex], currentIndex);
+      quizEl.appendChild(card);
+      updateNavButtons();
+      if (state.has(currentIndex)) {
+        paintAnswer(currentIndex);
+      }
+    }
+
+    function renderQuiz() {
+      state.clear();
+      currentIndex = 0;
+      resultEl.textContent = "Καλή επιτυχία!";
+      resultEl.style.background = "#eef8ff";
+      resultEl.style.color = "#0a62a5";
+      renderCurrentQuestion();
+    }
+
+    prevBtn.addEventListener("click", () => {
+      if (currentIndex === 0) return;
+      currentIndex -= 1;
+      renderCurrentQuestion();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentIndex >= questions.length - 1) return;
+      currentIndex += 1;
+      renderCurrentQuestion();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", renderQuiz);
+
+    shareUrlEl.textContent = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, "")}index2.html`;
+    renderQuiz();
+  </script>
+</body>
+</html>

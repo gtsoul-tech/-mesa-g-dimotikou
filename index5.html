@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Σύγκρισης Αριθμών</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Nunito", sans-serif;
+      background: linear-gradient(180deg, #f5fbff 0%, #e2f4ff 60%, #dbf6e6 100%);
+      color: #1a3850;
+      min-height: 100vh;
+      padding: 18px;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.97);
+      border: 2px solid #cfe8fa;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(15, 61, 93, 0.12);
+    }
+
+    h1 {
+      text-align: center;
+      color: #0b629e;
+      font-size: clamp(24px, 4vw, 34px);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #43647c;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .question-box {
+      margin-top: 14px;
+      background: #f7fcff;
+      border: 2px solid #d2ebfb;
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .counter {
+      text-align: center;
+      color: #4e718b;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .numbers {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      font-size: clamp(28px, 8vw, 48px);
+      font-weight: 900;
+      color: #0a466f;
+      margin-bottom: 14px;
+    }
+
+    .symbol {
+      font-size: clamp(26px, 7vw, 42px);
+      color: #0b629e;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .btn {
+      border: 2px solid #bfdff5;
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 900;
+      font-size: 22px;
+      color: #0b629e;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .btn:hover { border-color: #74b8e7; transform: translateY(-1px); }
+    .btn.correct { border-color: #2e9f48; background: #dff8e7; color: #22743a; }
+    .btn.wrong { border-color: #d64a4a; background: #ffe8e8; color: #9e2e2e; }
+    .btn:disabled { cursor: not-allowed; opacity: 0.98; }
+
+    .feedback {
+      margin-top: 10px;
+      min-height: 22px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-weight: 900;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    #prevBtn, #nextBtn { background: #0b629e; color: #fff; }
+    #resetBtn { background: #e9f5ff; color: #0b629e; }
+    #prevBtn:disabled, #nextBtn:disabled {
+      background: #b7d5ec;
+      color: #f4fbff;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 900;
+      border-radius: 12px;
+      background: #eef8ff;
+      color: #0b629e;
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h1>Γρήγορο Quiz Αριθμών</h1>
+      <p class="subtitle">Διάβασε τη σύγκριση και απάντησε: Σωστό ή Λάθος.</p>
+
+      <div class="question-box">
+        <p id="counter" class="counter"></p>
+        <div class="numbers"><span id="expression"></span></div>
+        <div class="options">
+          <button class="btn" data-value="true">Σωστό</button>
+          <button class="btn" data-value="false">Λάθος</button>
+        </div>
+        <p id="feedback" class="feedback"></p>
+      </div>
+
+      <div class="controls">
+        <button id="prevBtn" class="nav-btn" type="button">Προηγούμενη</button>
+        <button id="nextBtn" class="nav-btn" type="button">Επόμενη</button>
+        <button id="resetBtn" class="nav-btn" type="button">Νέο quiz</button>
+      </div>
+
+      <div id="result" class="result">Καλή επιτυχία!</div>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      { left: 4768, right: 5421, shownOp: ">", answer: false },
+      { left: 6988, right: 6899, shownOp: ">", answer: true },
+      { left: 7000, right: 7000, shownOp: "=", answer: true },
+      { left: 5123, right: 5213, shownOp: "<", answer: true },
+      { left: 6350, right: 6900, shownOp: ">", answer: false }
+    ];
+
+    const expressionEl = document.getElementById("expression");
+    const feedbackEl = document.getElementById("feedback");
+    const resultEl = document.getElementById("result");
+    const counterEl = document.getElementById("counter");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const optionButtons = document.querySelectorAll(".btn");
+    const state = new Map();
+    let currentIndex = 0;
+
+    function paintAnsweredState(index) {
+      const question = questions[index];
+      const selected = state.get(index);
+
+      optionButtons.forEach((btn) => {
+        btn.classList.remove("correct", "wrong");
+        if ((btn.dataset.value === "true") === question.answer) btn.classList.add("correct");
+        if (selected !== undefined && ((btn.dataset.value === "true") === selected) && selected !== question.answer) {
+          btn.classList.add("wrong");
+        }
+        btn.disabled = true;
+      });
+
+      if (selected === question.answer) {
+        feedbackEl.textContent = `Σωστό! ${question.left} ${question.shownOp} ${question.right}`;
+        feedbackEl.style.color = "#22743a";
+      } else {
+        const realOp = question.left > question.right ? ">" : (question.left < question.right ? "<" : "=");
+        feedbackEl.textContent = `Λάθος. Σωστό είναι: ${question.left} ${realOp} ${question.right}`;
+        feedbackEl.style.color = "#9e2e2e";
+      }
+    }
+
+    function updateScore() {
+      const score = questions.reduce((sum, q, i) => sum + (state.get(i) === q.answer ? 1 : 0), 0);
+      const answered = state.size;
+      const total = questions.length;
+      const percent = Math.round((score / total) * 100);
+
+      resultEl.textContent = `Σκορ: ${score}/${total} (${percent}%) • Απαντήθηκαν: ${answered}/${total}`;
+      if (percent >= 80) {
+        resultEl.style.background = "#dff8e7";
+        resultEl.style.color = "#22743a";
+      } else if (percent >= 50) {
+        resultEl.style.background = "#fff6dc";
+        resultEl.style.color = "#9a6a00";
+      } else {
+        resultEl.style.background = "#ffe8e8";
+        resultEl.style.color = "#9e2e2e";
+      }
+    }
+
+    function renderCurrentQuestion() {
+      const q = questions[currentIndex];
+      expressionEl.textContent = `${q.left} ${q.shownOp} ${q.right}`;
+      counterEl.textContent = `Ερώτηση ${currentIndex + 1} από ${questions.length}`;
+
+      optionButtons.forEach((btn) => {
+        btn.classList.remove("correct", "wrong");
+        btn.disabled = false;
+      });
+      feedbackEl.textContent = "";
+
+      if (state.has(currentIndex)) {
+        paintAnsweredState(currentIndex);
+      }
+
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === questions.length - 1;
+    }
+
+    function resetQuiz() {
+      state.clear();
+      currentIndex = 0;
+      resultEl.textContent = "Καλή επιτυχία!";
+      resultEl.style.background = "#eef8ff";
+      resultEl.style.color = "#0b629e";
+      renderCurrentQuestion();
+    }
+
+    optionButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (state.has(currentIndex)) return;
+        state.set(currentIndex, btn.dataset.value === "true");
+        paintAnsweredState(currentIndex);
+        updateScore();
+      });
+    });
+
+    prevBtn.addEventListener("click", () => {
+      if (currentIndex === 0) return;
+      currentIndex -= 1;
+      renderCurrentQuestion();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentIndex >= questions.length - 1) return;
+      currentIndex += 1;
+      renderCurrentQuestion();
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", resetQuiz);
+
+    resetQuiz();
+  </script>
+</body>
+</html>
